@@ -222,15 +222,6 @@ namespace Avalonia.DesignerSupport.Remote
         public IWindowIconImpl LoadIcon(IBitmapImpl bitmap) => new IconStub();
     }
 
-    class SystemDialogsStub : ISystemDialogImpl
-    {
-        public Task<string[]> ShowFileDialogAsync(FileDialog dialog, Window parent) =>
-            Task.FromResult((string[])null);
-
-        public Task<string> ShowFolderDialogAsync(OpenFolderDialog dialog, Window parent) =>
-            Task.FromResult((string)null);
-    }
-
     class ScreenStub : IScreenImpl
     {
         public int ScreenCount => 1;

@@ -73,19 +73,6 @@ namespace Avalonia.Headless
         public TimeSpan TouchDoubleClickTime => DoubleClickTime;
     }
 
-    class HeadlessSystemDialogsStub : ISystemDialogImpl
-    {
-        public Task<string[]> ShowFileDialogAsync(FileDialog dialog, Window parent)
-        {
-            return Task.Run(() => (string[])null);
-        }
-
-        public Task<string> ShowFolderDialogAsync(OpenFolderDialog dialog, Window parent)
-        {
-            return Task.Run(() => (string)null);
-        }
-    }
-
     class HeadlessGlyphTypefaceImpl : IGlyphTypefaceImpl
     {
         public short DesignEmHeight => 10;

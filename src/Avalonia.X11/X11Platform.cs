@@ -80,7 +80,6 @@ namespace Avalonia.X11
                 .Bind<IClipboard>().ToConstant(new X11Clipboard(this))
                 .Bind<IPlatformSettings>().ToConstant(new PlatformSettingsStub())
                 .Bind<IPlatformIconLoader>().ToConstant(new X11IconLoader(Info))
-                .Bind<ISystemDialogImpl>().ToConstant(DBusSystemDialog.TryCreate() as ISystemDialogImpl ?? new ManagedFileDialogExtensions.ManagedSystemDialogImpl<Window>())
                 .Bind<IMountedVolumeInfoProvider>().ToConstant(new LinuxMountedVolumeInfoProvider())
                 .Bind<IPlatformLifetimeEventsImpl>().ToConstant(new X11PlatformLifetimeEvents(this));
             
