@@ -9,7 +9,9 @@ using Android.Content;
 using Android.Provider;
 using Avalonia.Logging;
 using Avalonia.Platform.Storage;
+using Java.Lang;
 using AndroidUri = Android.Net.Uri;
+using Exception = System.Exception;
 using JavaFile = Java.IO.File;
 
 namespace Avalonia.Android.Platform.Storage;
@@ -43,66 +45,8 @@ internal abstract class AndroidStorageItem : IStorageBookmarkItem
         return true;
     }
 
-    public Task<StorageItemProperties> GetBasicPropertiesAsync()
-    {
-        ulong? size = null;
-        DateTimeOffset? itemDate = null;
-        DateTimeOffset? dateModified = null;
-
-        var projection = new[]
-        {
-            MediaStore.IMediaColumns.Size,
-            MediaStore.IMediaColumns.DateAdded,
-            MediaStore.IMediaColumns.DateModified
-        };
-        using var cursor = Context.ContentResolver!.Query(Uri, projection, null, null, null);
-
-        if (cursor?.MoveToFirst() == true)
-        {
-            try
-            {
-                var columnIndex = cursor.GetColumnIndex(MediaStore.IMediaColumns.Size);
-                if (columnIndex != -1)
-                {
-                    size = (ulong)cursor.GetLong(columnIndex);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.TryGet(LogEventLevel.Verbose, LogArea.AndroidPlatform)?
-                    .Log(this, "File Size metadata reader failed: '{Exception}'", ex);
-            }
-            try
-            {
-                var columnIndex = cursor.GetColumnIndex(MediaStore.IMediaColumns.DateAdded);
-                if (columnIndex != -1)
-                {
-                    itemDate = DateTimeOffset.FromUnixTimeMilliseconds(cursor.GetLong(columnIndex));
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.TryGet(LogEventLevel.Verbose, LogArea.AndroidPlatform)?
-                    .Log(this, "File DateAdded metadata reader failed: '{Exception}'", ex);
-            }
-            try
-            {
-                var columnIndex = cursor.GetColumnIndex(MediaStore.IMediaColumns.DateModified);
-                if (columnIndex != -1)
-                {
-                    dateModified = DateTimeOffset.FromUnixTimeMilliseconds(cursor.GetLong(columnIndex));
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.TryGet(LogEventLevel.Verbose, LogArea.AndroidPlatform)?
-                    .Log(this, "File DateAdded metadata reader failed: '{Exception}'", ex);
-            }
-        }
-
-        return Task.FromResult(new StorageItemProperties(size, itemDate, dateModified));
-    }
-
+    public abstract Task<StorageItemProperties> GetBasicPropertiesAsync();
+    
     protected string? GetColumnValue(Context context, AndroidUri contentUri, string column, string? selection = null, string[]? selectionArgs = null)
     {
         try
@@ -144,6 +88,11 @@ internal class AndroidStorageFolder : AndroidStorageItem, IStorageBookmarkFolder
     public AndroidStorageFolder(Context context, AndroidUri uri) : base(context, uri)
     {
     }
+
+    public override Task<StorageItemProperties> GetBasicPropertiesAsync()
+    {
+        return Task.FromResult(new StorageItemProperties());
+    }
 }
     
 internal class AndroidStorageFile : AndroidStorageItem, IStorageBookmarkFile
@@ -157,10 +106,10 @@ internal class AndroidStorageFile : AndroidStorageItem, IStorageBookmarkFile
     public bool CanOpenWrite => true;
 
     public Task<Stream> OpenRead() => Task.FromResult(OpenContentStream(Context, Uri, false)
-                                                      ?? throw new InvalidOperationException("Failed to open content stream"));
+        ?? throw new InvalidOperationException("Failed to open content stream"));
 
     public Task<Stream> OpenWrite() => Task.FromResult(OpenContentStream(Context, Uri, true)
-                                                       ?? throw new InvalidOperationException("Failed to open content stream"));
+        ?? throw new InvalidOperationException("Failed to open content stream"));
 
     private Stream? OpenContentStream(Context context, AndroidUri uri, bool isOutput)
     {
@@ -208,5 +157,75 @@ internal class AndroidStorageFile : AndroidStorageItem, IStorageBookmarkFile
         }
 
         return null;
+    }
+
+    public override Task<StorageItemProperties> GetBasicPropertiesAsync()
+    {
+        ulong? size = null;
+        DateTimeOffset? itemDate = null;
+        DateTimeOffset? dateModified = null;
+
+        try
+        {
+            var projection = new[]
+            {
+                MediaStore.IMediaColumns.Size, MediaStore.IMediaColumns.DateAdded,
+                MediaStore.IMediaColumns.DateModified
+            };
+            using var cursor = Context.ContentResolver!.Query(Uri, projection, null, null, null);
+
+            if (cursor?.MoveToFirst() == true)
+            {
+                try
+                {
+                    var columnIndex = cursor.GetColumnIndex(MediaStore.IMediaColumns.Size);
+                    if (columnIndex != -1)
+                    {
+                        size = (ulong)cursor.GetLong(columnIndex);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.TryGet(LogEventLevel.Verbose, LogArea.AndroidPlatform)?
+                        .Log(this, "File Size metadata reader failed: '{Exception}'", ex);
+                }
+
+                try
+                {
+                    var columnIndex = cursor.GetColumnIndex(MediaStore.IMediaColumns.DateAdded);
+                    if (columnIndex != -1)
+                    {
+                        var longValue = cursor.GetLong(columnIndex);
+                        itemDate = longValue > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(longValue) : null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.TryGet(LogEventLevel.Verbose, LogArea.AndroidPlatform)?
+                        .Log(this, "File DateAdded metadata reader failed: '{Exception}'", ex);
+                }
+
+                try
+                {
+                    var columnIndex = cursor.GetColumnIndex(MediaStore.IMediaColumns.DateModified);
+                    if (columnIndex != -1)
+                    {
+                        var longValue = cursor.GetLong(columnIndex);
+                        dateModified = longValue > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(longValue) : null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.TryGet(LogEventLevel.Verbose, LogArea.AndroidPlatform)?
+                        .Log(this, "File DateAdded metadata reader failed: '{Exception}'", ex);
+                }
+            }
+        }
+        catch (UnsupportedOperationException)
+        {
+            // It's not possible to get parameters of some files/folders.
+        }
+
+        return Task.FromResult(new StorageItemProperties(size, itemDate, dateModified));
     }
 }

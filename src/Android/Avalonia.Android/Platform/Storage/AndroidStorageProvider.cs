@@ -17,30 +17,16 @@ internal class AndroidStorageProvider : IStorageProvider
     private readonly AvaloniaActivity _activity;
     private int _lastRequestCode = 20000;
 
-    private bool? _canOpen, _canSave, _canPickFolder;
-        
     public AndroidStorageProvider(AvaloniaActivity activity)
     {
         _activity = activity;
     }
 
-    public bool CanOpen => _canOpen
-        ??= OperatingSystem.IsAndroidVersionAtLeast(19) && new Intent(Intent.ActionOpenDocument)
-            .AddCategory(Intent.CategoryOpenable)
-            .SetType(FilePickerFileTypes.All.MimeTypes![0])
-            .ResolveActivity(_activity.PackageManager!) is not null;
+    public bool CanOpen => OperatingSystem.IsAndroidVersionAtLeast(19);
 
-    public bool CanSave => _canSave
-        ??= OperatingSystem.IsAndroidVersionAtLeast(19) && new Intent(Intent.ActionCreateDocument)
-            .AddCategory(Intent.CategoryOpenable)
-            .SetType(FilePickerFileTypes.All.MimeTypes![0])
-            .ResolveActivity(_activity.PackageManager!) is not null;
+    public bool CanSave => OperatingSystem.IsAndroidVersionAtLeast(19);
 
-    public bool CanPickFolder => _canPickFolder
-        ??= OperatingSystem.IsAndroidVersionAtLeast(21) && new Intent(Intent.ActionOpenDocumentTree)
-            .AddCategory(Intent.CategoryOpenable)
-            .SetType(FilePickerFileTypes.All.MimeTypes![0])
-            .ResolveActivity(_activity.PackageManager!) is not null;
+    public bool CanPickFolder => OperatingSystem.IsAndroidVersionAtLeast(21);
 
     public Task<IStorageBookmarkFolder?> OpenFolderBookmarkAsync(string bookmark)
     {
@@ -62,7 +48,6 @@ internal class AndroidStorageProvider : IStorageProvider
         var intent = new Intent(Intent.ActionOpenDocument)
             .AddCategory(Intent.CategoryOpenable)
             .PutExtra(Intent.ExtraAllowMultiple, options.AllowMultiple)
-            .PutExtra(DocumentsContract.ExtraInitialUri, options.AllowMultiple)
             .SetType(FilePickerFileTypes.All.MimeTypes![0]);
         if (mimeTypes.Length > 0)
         {
@@ -112,7 +97,6 @@ internal class AndroidStorageProvider : IStorageProvider
     public async Task<IStorageFolder?> OpenFolderPickerAsync(FolderPickerOpenOptions options)
     {
         var intent = new Intent(Intent.ActionOpenDocumentTree)
-            .AddCategory(Intent.CategoryOpenable);
         if (TryGetInitialUri(options.SuggestedStartLocation) is { } initialUri)
         {
             intent = intent.PutExtra(DocumentsContract.ExtraInitialUri, initialUri);
