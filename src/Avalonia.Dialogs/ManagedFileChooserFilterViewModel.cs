@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
+using Avalonia.Platform.Storage;
 
 namespace Avalonia.Dialogs
 {
@@ -10,11 +12,11 @@ namespace Avalonia.Dialogs
         private readonly string[] _extensions;
         public string Name { get; }
 
-        public ManagedFileChooserFilterViewModel(FileDialogFilter filter)
+        public ManagedFileChooserFilterViewModel(FilePickerFileType filter)
         {
             Name = filter.Name;
 
-            if (filter.Extensions.Contains("*"))
+            if (filter.Extensions?.Contains("*") == true)
             {
                 return;
             }
