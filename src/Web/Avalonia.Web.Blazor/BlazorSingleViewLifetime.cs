@@ -22,8 +22,8 @@ namespace Avalonia.Web.Blazor
             where TApp : Application, new()
         {
             var builder = AvaloniaBlazorAppBuilder.Configure<TApp>()
-                .UseSkia()
-                .With(new SkiaOptions { CustomGpuFactory = () => new BlazorSkiaGpu() });
+                .UseSkia();
+                //.With(new SkiaOptions { CustomGpuFactory = () => new BlazorSkiaGpu() });
 
             return builder;
         }
