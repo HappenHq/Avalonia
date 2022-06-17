@@ -6,7 +6,7 @@ using SkiaSharp;
 
 namespace Avalonia.Web.Blazor
 {
-    internal class BlazorSkiaRasterSurface : IBlazorSkiaSurface, IFramebufferPlatformSurface
+    internal class BlazorSkiaRasterSurface : IBlazorSkiaSurface, IFramebufferPlatformSurface, IDisposable
     {
         public SKColorType ColorType { get; set; }
 
@@ -14,9 +14,7 @@ namespace Avalonia.Web.Blazor
 
         public double Scaling { get; set; }
 
-        private LockedFramebuffer? _fb;
-        private byte[]? _fbData;
-        private GCHandle _fbDataHandle;
+        private FramebufferData? _fbData;
         private readonly Action<IntPtr, SKSizeI> _blitCallback;
         private readonly Action _onDisposeAction;
 
@@ -30,6 +28,12 @@ namespace Avalonia.Web.Blazor
             _onDisposeAction = Blit;
         }
 
+        public void Dispose()
+        {
+            _fbData?.Dispose();
+            _fbData = null;
+        }
+
         public ILockedFramebuffer Lock()
         {
             var bytesPerPixel = 4; // TODO: derive from ColorType
@@ -37,39 +41,50 @@ namespace Avalonia.Web.Blazor
             var width = (int)(Size.Width * Scaling);
             var height = (int)(Size.Height * Scaling);
 
-            if (_fb is null || _fb.Size.Width != width || _fb.Size.Height != height)
+            if (_fbData is null || _fbData?.Size.Width != width || _fbData?.Size.Height != height)
             {
-                FreeFramebufferData();
-                AllocateFramebufferData(width * height * bytesPerPixel);
+                _fbData?.Dispose();
+                _fbData = new FramebufferData(width, height, bytesPerPixel);
             }
 
-            var rowBytes = Size.Width * bytesPerPixel;
             var pixelFormat = ColorType.ToPixelFormat();
-            return _fb = new LockedFramebuffer(
-                _fbDataHandle.AddrOfPinnedObject(), new PixelSize(width, height), rowBytes,
+            var data = _fbData.Value;
+            return new LockedFramebuffer(
+                data.Address, data.Size, data.RowBytes,
                 new Vector(dpi, dpi), pixelFormat, _onDisposeAction);
-        }
-
-        private void AllocateFramebufferData(int size)
-        {
-            _fbData = new byte[size];
-            _fbDataHandle = GCHandle.Alloc(_fbData, GCHandleType.Pinned);
-        }
-
-        private void FreeFramebufferData()
-        {
-            if (_fbData != null)
-            {
-                _fbDataHandle.Free();
-                _fbData = null;
-            }
         }
 
         private void Blit()
         {
-            if (_fb != null)
+            if (_fbData != null)
             {
-                _blitCallback(_fb.Address, new SKSizeI(_fb.Size.Width, _fb.Size.Height));
+                var data = _fbData.Value;
+                _blitCallback(data.Address, new SKSizeI(data.Size.Width, data.Size.Height));
+            }
+        }
+
+        private readonly struct FramebufferData
+        {
+            private readonly byte[]? _data;
+            private readonly GCHandle _dataHandle;
+
+            public PixelSize Size { get; }
+
+            public int RowBytes { get; }
+
+            public IntPtr Address => _dataHandle.AddrOfPinnedObject();
+
+            public FramebufferData(int width, int height, int bytesPerPixel)
+            {
+                Size = new PixelSize(width, height);
+                RowBytes = width * bytesPerPixel;
+                _data = new byte[width * height * bytesPerPixel];
+                _dataHandle = GCHandle.Alloc(_data, GCHandleType.Pinned);
+            }
+
+            public void Dispose()
+            {
+                _dataHandle.Free();
             }
         }
     }
