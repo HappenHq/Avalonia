@@ -11,6 +11,7 @@ public partial class App
             {
                 ControlCatalog.Pages.EmbedSample.Implementation = new EmbedSampleWeb();
             })
+            //.With(new SkiaOptions { UseGpu = false }) // uncomment to disable GPU/GL rendering
             .SetupWithSingleViewLifetime();
 
         base.OnParametersSet();

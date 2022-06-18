@@ -37,7 +37,7 @@ namespace Avalonia.Web.Blazor
         private const SKColorType ColorType = SKColorType.Rgba8888;
 
         private bool _initialised;
-        private bool _useGL = false;
+        private bool _useGL;
 
         [Inject] private IJSRuntime Js { get; set; } = null!;
 
@@ -262,6 +262,10 @@ namespace Avalonia.Web.Blazor
                 _interop = await SKHtmlCanvasInterop.ImportAsync(Js, _htmlCanvas, OnRenderFrame);
 
                 Console.WriteLine("Interop created");
+                
+                var skiaOptions = AvaloniaLocator.Current.GetService<SkiaOptions>();
+                _useGL = skiaOptions?.UseGpu ?? false;
+
                 if (_useGL)
                 {
                     _jsGlInfo = _interop.InitGL();
@@ -282,9 +286,9 @@ namespace Avalonia.Web.Blazor
                         _glInterface = GRGlInterface.Create();
                         _context = GRContext.CreateGl(_glInterface);
 
-                        var options = AvaloniaLocator.Current.GetService<SkiaOptions>();
+                        
                         // bump the default resource cache limit
-                        _context.SetResourceCacheLimit(options?.MaxGpuResourceSizeBytes ?? 32 * 1024 * 1024);
+                        _context.SetResourceCacheLimit(skiaOptions?.MaxGpuResourceSizeBytes ?? 32 * 1024 * 1024);
                         Console.WriteLine("glcontext created and resource limit set");
                     }
 
