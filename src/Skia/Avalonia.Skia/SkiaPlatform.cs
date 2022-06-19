@@ -17,7 +17,7 @@ namespace Avalonia.Skia
 
         public static void Initialize(SkiaOptions options)
         {
-            var customGpu = options.UseGpu ? options.CustomGpuFactory?.Invoke() : null;
+            var customGpu = options.CustomGpuFactory?.Invoke();
             var renderInterface = new PlatformRenderInterface(customGpu, options.MaxGpuResourceSizeBytes);
 
             AvaloniaLocator.CurrentMutable

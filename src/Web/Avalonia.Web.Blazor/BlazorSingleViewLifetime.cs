@@ -23,11 +23,7 @@ namespace Avalonia.Web.Blazor
         {
             var builder = AvaloniaBlazorAppBuilder.Configure<TApp>()
                 .UseSkia()
-                .With(new SkiaOptions
-                {
-                    UseGpu = true,
-                    CustomGpuFactory = () => new BlazorSkiaGpu()
-                });
+                .With(new SkiaOptions { CustomGpuFactory = () => new BlazorSkiaGpu() });
 
             return builder;
         }

@@ -9,11 +9,6 @@ namespace Avalonia
     public class SkiaOptions
     {
         /// <summary>
-        /// Allow Skia renderer to use GPU/GL, if this is not enabled the raster backend will be used instead.
-        /// </summary>
-        public bool UseGpu { get; set; }
-
-        /// <summary>
         /// Custom gpu factory to use. Can be used to customize behavior of Skia renderer.
         /// </summary>
         public Func<ISkiaGpu> CustomGpuFactory { get; set; }

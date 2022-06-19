@@ -264,7 +264,7 @@ namespace Avalonia.Web.Blazor
                 Console.WriteLine("Interop created");
                 
                 var skiaOptions = AvaloniaLocator.Current.GetService<SkiaOptions>();
-                _useGL = skiaOptions?.UseGpu ?? false;
+                _useGL = skiaOptions?.CustomGpuFactory != null;
 
                 if (_useGL)
                 {
