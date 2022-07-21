@@ -425,6 +425,15 @@ namespace Avalonia.Controls
 
         protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
+            if (e.Source == this
+                && !e.Handled
+                && e.InitialPressMouseButton == MouseButton.Right)
+            {
+                var args = new ContextRequestedEventArgs(e);
+                RaiseEvent(args);
+                e.Handled = args.Handled;
+            }
+
             if (!IsTextSelectionEnabled)
             {
                 return;

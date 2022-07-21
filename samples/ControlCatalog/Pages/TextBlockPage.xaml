@@ -1,6 +1,13 @@
 <UserControl x:Class="ControlCatalog.Pages.TextBlockPage"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Resources>
+    <MenuFlyout x:Key="SharedMenuFlyout">
+      <MenuItem Header="Item 1"/>
+      <MenuItem Header="Item 2"/>
+    </MenuFlyout>
+  </UserControl.Resources>
+
   <StackPanel>
     <TextBlock Classes="h2">A control that can display text</TextBlock>
     <WrapPanel MaxWidth="680"
@@ -117,16 +124,20 @@
           <TextBlock Text="👪 👨‍👩‍👧 👨‍👩‍👧‍👦" />
         </StackPanel>
       </Border>
-      <Border>
-        <RichTextBlock Margin="10" TextWrapping="Wrap">
-          This <Span FontWeight="Bold">is</Span> a
-          <Span Background="Silver" Foreground="Maroon">TextBlock</Span>
-          with <Span TextDecorations="Underline">several</Span>
-          <Span FontStyle="Italic">Span</Span> elements,
-          <Span Foreground="Blue">
-            using a <Bold>variety</Bold> of <Italic>styles</Italic>
-          </Span>.
-        </RichTextBlock>
+      <Border >
+        <ContentControl ContextFlyout="{StaticResource SharedMenuFlyout}">
+          <RichTextBlock Margin="10" TextWrapping="Wrap" >
+            <LineBreak/>This <Span FontWeight="Bold">is</Span><LineBreak/> a
+            <Span Background="Silver" Foreground="Maroon">TextBlock</Span>
+            <LineBreak/>
+            <LineBreak/>
+            with <Span TextDecorations="Underline">several</Span>
+            <Span FontStyle="Italic">Span</Span> elements,
+            <Span Foreground="Blue">
+              using a <Bold>variety</Bold> of <Italic>styles</Italic>
+            </Span>.
+          </RichTextBlock>
+        </ContentControl>
       </Border>
     </WrapPanel>
   </StackPanel>
